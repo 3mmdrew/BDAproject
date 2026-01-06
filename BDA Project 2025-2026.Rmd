@@ -308,11 +308,11 @@ print(df_transcriptomics[1:7, c(1:8)])
     "Plasma_Metabolomics_Normalized.csv" will not be changed.
 
 ```{r Assignment 1A, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
-df_metabolomics_Exp <- df_metabolomics %>% select(Experiment.Group:Rat.Sex)
-df_metabolomics_Exp$GroupTime <-paste(df_metabolomics_Exp$Experiment.Group, df_metabolomics_Exp$Experiment.Time, sep = " ")
+df_metabolomics_Exp <- df_metabolomics[, c("Experiment.Group", "Experiment.Time", "Rat.Sex")]
+df_metabolomics_Exp$Groups <-paste(df_metabolomics_Exp$Experiment.Group, df_metabolomics_Exp$Experiment.Time, sep = " ")
 
-
-
+mgene_cols <- !(colnames(df_metabolomics) %in% c("Experiment.Group", "Experiment.Time", "Rat.Sex"))
+df_metabolomics_Values <- df_metabolomics[, mgene_cols]
 ```
 
 #### 1B)
@@ -323,7 +323,18 @@ at the end of the data frame. Also make and add the Group variable to
 the df with experimental details [1].
 
 ```{r Assignment 1B, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+df_transcriptomics_Exp <- df_transcriptomics[, c("Experiment.Group", "Experiment.Time", "sex")]
 
+df_transcriptomics_Exp$Groups <- paste(
+  ifelse(df_transcriptomics_Exp$Training == 0, "Control", "Training"),
+  df_transcriptomics_Exp$Time,
+  "weeks"
+)
+
+gene_cols <- !(colnames(df_transcriptomics) %in% c("Experiment.Group", "Experiment.Time", "sex"))
+df_transcriptomics_Values <- df_transcriptomics[, gene_cols]
+df_transcriptomics_Values <- data.frame(apply(df_transcriptomics_Values, 2, as.numeric))
+rownames(df_transcriptomics_Values) <- rownames(df_transcriptomics)
 ```
 
 #### To make sure the transcriptomics values are considered numeric, run the next line:
@@ -341,7 +352,9 @@ those genes for which this number is larger than 25. Make a new data
 frame df_transcriptomics_Filtered that only contains these genes. [1]
 
 ```{r Assignment 1C,Filter genes, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
-
+nonzero_counts <- apply(df_transcriptomics_Values, 2, function(x) sum(x != 0))
+genes_to_keep <- nonzero_counts > 25
+df_transcriptomics_Filtered <- df_transcriptomics_Values[, genes_to_keep]
 ```
 
 #### 1D)
@@ -351,7 +364,10 @@ transcriptomics_Filtered and transcriptomics_Exp data frames into new
 csv files in your working directory. [2]
 
 ```{r Assignment 1D, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
-
+write.csv(df_metabolomics_Values, "Metabolomics_Values.csv", row.names = TRUE)
+write.csv(df_metabolomics_Exp, "Metabolomics_Exp.csv", row.names = TRUE)
+write.csv(df_transcriptomics_Filtered, "Transcriptomics_Filtered.csv", row.names = TRUE)
+write.csv(df_transcriptomics_Exp, "Transcriptomics_Exp.csv", row.names = TRUE)
 ```
 
 Check whether the files were written correctly. Now you have cleaned
@@ -368,7 +384,42 @@ assignments.
     Add labels for the x-axis and titles for each subfigure. [1]\
 
 ```{r Assignment 1E, include=TRUE, eval=TRUE, echo=TRUE}
+row_sums <- rowSums(df_transcriptomics_Filtered)
+col_sums <- colSums(df_transcriptomics_Filtered)
+par(mfrow = c(1, 2))
 
+# Histogram for row sums (rats)
+hist(log(row_sums), 
+     main = "Log of Row Sums (Rats)", 
+     xlab = "Log(Total Counts per Rat)",
+     col = "lightblue",
+     breaks = 20)
+
+legend("topright", 
+       legend = c(
+         paste("N:", length(row_sums)),
+         paste("Range:", round(min(row_sums)/1e6), "-", round(max(row_sums)/1e6), "M")
+       ),
+       bty = "n",
+       cex = 0.6)
+
+# Histogram for col sums (genes)
+hist(log(col_sums), 
+     main = "Log of Column Sums (Genes)", 
+     xlab = "Log(Total Counts per Gene)",
+     col = "lightgreen",
+     breaks = 20)
+
+legend("topright", 
+       legend = c(
+         paste("N:", length(col_sums)),
+         paste("Range:", round(min(col_sums)), "-", round(max(col_sums)/1e6, 1), "M")
+       ),
+       bty = "n",
+       cex = 0.7)
+
+
+par(mfrow = c(1, 1)) 
 ```
 
 #### 1F): Interpretation.
@@ -380,7 +431,7 @@ these data. - what does it mean when the sum of all values of a sample
 or of a feature is larger than of another sample or feature? - Why is it
 useful to plot the log of the row and column sums?
 
-#### Put any text for Interpretation 1F here.
+#### Row sums represent total gene expression counts per rat (sequencing depth or library size), whereas the column sums represent the total counts per gene across all rats [the overall gene expression level]. Larger row sums indicate higher sequencing depth for a sample, which typically reflects technical variation rather than biological diffs. Larger column sums can indicate more highly expressed genes. Log transformation is essential as the gene data spans many orders of magnitude and without it the histogram would be dominated by extrem values. The log values are useful as they compress the scale, make outliers visible, and help identify the type of distribution the data best resembles. The row sum histogram is expected to show relatively consistent sequencing depth across samples, whereas the column sum histogram is expected to show more variation due to natural genetic variation in expression levels.
 
 #### End of text block.
 
@@ -393,7 +444,34 @@ useful to plot the log of the row and column sums?
     dataset.[1]\
 
 ```{r Assignment 1G, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+col_means <- apply(df_transcriptomics_Filtered, 2, mean)
+col_sds <- apply(df_transcriptomics_Filtered, 2, sd)
 
+plot(log(col_means), log(col_sds),
+     xlab = "Log(Mean)",
+     ylab = "Log(Standard Deviation)",
+     main = "Mean-Variance Relationship in Transcriptomics Data",
+     pch = 16,
+     col = rgb(0, 0, 1, 0.5),
+     cex = 0.8)
+
+abline(a = log(1)/2, b = 0.5, col = "red", lty = 2, lwd = 2)
+
+legend("topleft", 
+       legend = c(
+         paste("N genes:", length(col_means)),
+         paste("Mean range:", round(min(col_means)), "-", round(max(col_means))),
+         paste("SD range:", round(min(col_sds)), "-", round(max(col_sds)))
+       ),
+       bty = "n",
+       cex = 0.8)
+
+# Add reference line label
+text(x = max(log(col_means)) - 1, 
+     y = min(log(col_sds)) + 0.5,
+     labels = "Poisson reference\n(var = mean)",
+     col = "red",
+     cex = 0.8)
 ```
 
 #### 1H): Interpretation.
@@ -423,7 +501,40 @@ axes. [0.5]\
 #### Put your code here
 
 ```{r Assignment 1I, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+alanine_raw <- df_metabolomics_Values$Alanine
+alanine_centered <- alanine_raw - mean(alanine_raw)
+alanine_scaled <- alanine_centered / sd(alanine_raw)
 
+
+par(mfrow = c(1, 3))
+# Raw Alanine
+plot(alanine_raw,
+     main = "Raw Alanine Levels",
+     xlab = "Sample",
+     ylab = "Alanine",
+     pch = 16,
+     col = "blue")
+abline(h = mean(alanine_raw), col = "red", lty = 2)
+
+# Meancentered Alanine
+plot(alanine_centered,
+     main = "Meancentered Alanine",
+     xlab = "Sample",
+     ylab = "Alanine (centered)",
+     pch = 16,
+     col = "darkgreen")
+abline(h = 0, col = "red", lty = 2)
+
+# Meancentered and Scaled Alanine
+plot(alanine_scaled,
+     main = "Centered & Scaled Alanine",
+     xlab = "Sample",
+     ylab = "Alanine (z-score)",
+     pch = 16,
+     col = "purple")
+abline(h = 0, col = "red", lty = 2)
+
+par(mfrow = c(1, 1))
 ```
 
 #### 1J): Interpretation.
@@ -453,7 +564,23 @@ columns, [1].
 information is used with respect to scaling the data. [1]
 
 ```{r Assignment 1K, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+metabolite_sds <- apply(df_metabolomics_Values, 2, sd)
 
+hist(metabolite_sds,
+     main = "Distribution of Metabolite Standard Deviations",
+     xlab = "Standard Deviation",
+     ylab = "Frequency",
+     col = "lightcoral",
+     breaks = 30)
+legend("topright",
+       legend = c(
+         paste("N metabolites:", length(metabolite_sds)),
+         paste("Mean SD:", round(mean(metabolite_sds), 2)),
+         paste("Median SD:", round(median(metabolite_sds), 2)),
+         paste("Range:", round(min(metabolite_sds), 2), "-", round(max(metabolite_sds), 2))
+       ),
+       bty = "n",
+       cex = 0.8)
 ```
 
 **Put your discussion what you can learn for the histogram here.**

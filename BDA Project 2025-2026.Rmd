@@ -1,0 +1,1187 @@
+---
+title: "BDA project 2025-2026"
+author: "J.A. Westerhuis, A.U.S. Heintz-Buschart"
+date: "06/01/2026 - 17/01/2026"
+output:
+  pdf_document:
+    number_sections: no
+    toc: yes
+    toc_depth: 3
+  html_document:
+    toc: yes
+    toc_depth: '3'
+    df_print: paged
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+\newpage
+
+# BDA project 2025-2026
+
+## Project description
+
+Welcome to the BDA project 2025-2026 syllabus. In this document you will
+find all the information you need to do your BDA project.\
+
+The main goals of the Project are to learn how to:
+
+1.  analyze your data using common data analysis methods,\
+2.  visualize the results of the analysis methods,\
+3.  be able to interpret the results.\
+
+In this course you can use Quarto or R-Markdown to combine explainable
+text and code in the same document. You have to submit a PDF by
+rendering of knitting your document. Make sure your PDF only contains
+the necessary text and code and not e.g. a print of all your data.
+
+Check the Statistics with R syllabus for tips on working reproducible!
+
+## Exercise description
+
+Besides this project, every topic also has exercises. The goal of the
+exercises is to teach you the different properties of the data and of
+the data analysis methods:
+
+1.  What are the properties of each sample and how do samples relate to
+    each other ?\
+
+2.  What are the properties of the variables, and how are they related
+    ?\
+
+3.  What is the distribution of the samples for certain variables ?\
+
+4.  What is the noise level, how much systematic variation is present?\
+
+5.  What is the meaning of scores, loadings, residuals in PCA?\
+
+6.  Which distance measures should be used in clustering methods.\
+
+7.  How to validate the result of a classification method.\
+
+Thus the goal of the exercise is to make you aware of the specifics of
+the data and the methods, while the Project is to show you are able to
+use R to apply the methods, visualize and interpret results. Therefore,
+it is important to first go through the exercises, discuss with your
+fellow students, get feedback from TAs and teachers such that you
+understand the data and the methods.
+
+NB!
+
+1.  You are responsible for sufficient interaction and feedback.\
+2.  In answering the Project questions plagiarism rules still apply,
+    thus if you use information other than your own ideas, give proper
+    reference.\
+
+### Groups
+
+The Project has to be done in pairs. This is because many of the
+open-ended questions we ask during your project are open for debate. In
+such cases it is really helpful to have a partner who you can discuss
+with about what the next step should be. Also you will be able to run
+RStudio on two computers at the same time, which will help you in
+splitting up the tasks and completing the assignments faster overall.
+Please supply your names in the code block below.
+
+```{r Names, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+name1 = "Andrew Crossley"
+name2 = "Cornelus Palsma"
+```
+
+### Submission and grading
+
+You will hand in your project quarto or markdown file and knitted .pdf
+files in the first and second week. In the first week you will get an
+indicative pass/fail grade and some feedback to help you progress. In
+the second week you will receive a full grade and some feedback. The
+deadline for the first week submission is Tuesday January 13 8:00 (AM),
+for which you need to complete Assignments 1 up to and including
+Assignment 3. The deadline for the second week submission is Tuesday
+January 20 08:00 (AM), for which you will need to complete Assignment 1
+up to and including Assignment 6. Note that you can use the week 1
+feedback to improve your answers from Assignments 1-3 before the second
+submission! If you do, then you have to indicate in the new PDF what was
+changed from the previous submission. The latest version of Assignments
+1-3 will be used for final grading in week 2. Please refer to the course
+book on Canvas for more information on the BDA course organisation.
+
+Grading of the project will be done using a rubric for each assignment.
+An overview of the number of points you can get for every assignment is
+given below. Every question states how many points you can get for it.
+
+| Assignment                      | Number of points |
+|---------------------------------|------------------|
+| 1: Linear Algebra               | 20               |
+| 2: Gene Expression Analysis     | 20               |
+| 3: Principal Component Analysis | 20               |
+| 4: Clustering                   | 20               |
+| 5: Classification               | 20               |
+| 6: ASCA                         | 20               |
+| Total                           | 120              |
+
+It is crucial for the graders to understand what you have done and why.
+Please elaborate in the supplied text boxes below each question what
+your reasoning is for making a certain step. To make your figures
+eligible for grading, you should add a clear labels and titles, as well
+as a clear description of what you have done to make your figure. When
+writing your code in the code blocks, add comments clarifying what you
+are doing!
+
+### Root dir
+
+To make sure R knows where to find the data and where to store results
+you have to set a root directory. Fill in here the directory on your
+computer where the data is stored.
+
+```{r Rootdir, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+knitr::opts_knit$set(root.dir = '..')
+```
+
+The following code block contains some extra settings to make sure that
+your deliverable at the end of the project will be easier to grade for
+the teaching team. Please do not modify it in any way.
+
+```{r truncate output, echo=FALSE, include=FALSE, message=FALSE}
+# save the built-in output hook
+hook_output <- knitr::knit_hooks$get("output")
+
+# set a new output hook to truncate text output
+knitr::knit_hooks$set(output = function(x, options) {
+  if (!is.null(n <- options$out.lines)) {
+    x <- xfun::split_lines(x)
+    if (length(x) > n) {
+      # truncate the output
+      x <- c(head(x, n/2), '....', tail(x, n/2 + 1), '\n')
+    }
+    x <- paste(x, collapse = "\n")
+  }
+  hook_output(x, options)
+})
+```
+
+### Help
+
+As any programmer will tell you, looking stuff up on Google is a major
+part of any project. Hence looking up specific R programming questions
+may be helpful in progressing in your project assignments. Coding
+websites such as [StackOverflow](https://stackoverflow.com/) are
+particularly helpful.
+
+Specific questions on how functions work in R can be answered using the
+R documentation. Say you want to understand how you can run the singular
+value decomposition function svd(). On the right side of your screen you
+can find a "help" tab where you can search for the function that you
+want to use. You can type "svd" in the search field there to reach the
+documentation of the svd() function. Additionally, you can type "?svd"
+in your console window at the bottom of your screen to automatically
+search for the documentation of your supplied function.
+
+If things are unclear to you or you have any other question, feel free
+to ask any of your lecturers or teaching assistants (TAs):\
+- Johan Westerhuis (Course coordinator, teacher
+[j.a.westerhuis\@uva.nl](mailto:j.a.westerhuis@uva.nl){.email})\
+- Anna Heintz Buschart (Teacher,
+[a.u.s.heintzbuschart\@uva.nl](mailto:a.u.s.heintzbuschart@uva.nl){.email})\
+- Gustavo Stolf Jeuken (Teacher,
+[g.stolfjeuken\@vu.nl](mailto:g.stolfjeuken@vu.nl){.email})\
+- Alex Sanchez Cano (Teacher,
+[a.sanchezcano\@uva.nl](mailto:a.sanchezcano@uva.nl){.email})\
+
+### Installation of necessary packages
+
+Below are the packages we will use throughout the course. Do not edit
+this code block!
+
+```{r load packages, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE, warning=FALSE}
+
+if(!"umap" %in% installed.packages()[,1]){
+  install.packages("umap")
+}
+
+if(!"MASS" %in% installed.packages()[,1]){
+  install.packages("MASS")
+}
+
+if(!"gtools" %in% installed.packages()[,1]){
+  install.packages("gtools")
+}
+
+if(!"stringr" %in% installed.packages()[,1]){
+  install.packages("stringr")
+}
+
+library(umap)
+library(MASS)
+library(gtools)
+library(stringr)
+```
+
+### The MoTrPAC data
+
+The Molecular Transducers of Physical Activity Consortium (MoTrPAC)
+profiled the dynamic change of multiple omics layers in several organs
+of rats undergoing physical training. The results are presented in the
+Nature article "Temporal dynamics of the multi-omic response to
+endurance exercise training". The paper can be found on the canvas page,
+and the data was obtained from their website MoTrPAC-data.org.
+
+### Experimental design
+
+Six-month-old male and female Fischer 344 rats were subjected to
+progressive treadmill endurance exercise training for 1, 2, 4 or 8
+weeks. Sex-matched sedentary, untrained rats were used as controls. In
+this project we will focus on the transcriptomics data obtained from
+blood cells and metabolomics data from plasma. Unfortunately these
+measurements do not all come from the same rats.
+
+## Assignments
+
+In this assignment, you will start your exploration of the data by
+checking various summaries per row and per column of your data tables.
+You will also make a few histograms and inspect them to check the
+comparability of the samples and variables. Finally you will mean center
+and scale your data for use in the other assignments. NB! We assume you
+have worked through the R-tutorial before starting this assignment.
+
+### First look at the data
+
+Load the metabolomics and transcriptomics data sets.
+
+```{r Data importing, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+df_metabolomics = read.csv("Plasma_Metabolomics_Normalized.csv", row.names = 1)
+df_transcriptomics = read.csv("Blood_Transcriptomics_Counts.csv",row.names = 1)
+```
+
+Take a quick view of the different data sets. Lets start with the
+metabolomics data.
+
+```{r metabolomics data example, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+print(df_metabolomics[1:7, c(1:8)])
+```
+
+In the first few columns are numbers identifying the specific rat
+number, the experimental group (training or control) and experimental
+time (1,2,4,8 weeks) as well as the sex of the rat (1 = female, 2 =
+male). From column 4 onwards is where the metabolomics data is shown.
+For the metabolomics data, the metabolite levels are normalized by the
+measurement of a known standard.
+
+Then take a quick view of the transcriptomics data.
+
+```{r transcriptomics data example, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+print(df_transcriptomics[1:7, c(1:8)])
+```
+
+The transcriptomics data is transposed, the rats are in the columns
+while the genes are in the rows. The experimental details for each rat
+can be found in the last few rows of the data frame. Furthermore, the
+counts are not considered numeric. Let's change that.
+
+```{r Transpose Transcriptomics data}
+df_transcriptomics = data.frame(t(df_transcriptomics))
+print(df_transcriptomics[1:7, c(1:8)])
+```
+
+### From now on you have to give the code and answers yourself!
+
+### Assignment 1: Linear Algebra (Johan Westerhuis, 05-01-2026)
+
+#### 1A) Data pretreatment:
+
+1)  For the metabolomics data, remove the columns with experimental
+    details and Sex of the rat and store them in a new data frame
+    df_metabolomics_Exp. Make a new column in the experimental data
+    frame called Groups indicating one of these 5 levels: Control 8
+    weeks, Training 1 week, Training 2 weeks, Training 4 weeks and
+    Training 8 weeks.[1]
+
+2)  Also make a new data frame df_metabolomics_Values with only the
+    metabolite levels.[1]
+
+3)  Remove metabolite Oleoyl.EA as this one has missing values for some
+    rats. [1]
+
+    !N.B. Do not save the changed file
+    "Plasma_Metabolomics_Normalized.csv". At the end of this assignment
+    we will save the data under a different name such that
+    "Plasma_Metabolomics_Normalized.csv" will not be changed.
+
+```{r Assignment 1A, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+
+```
+
+#### 1B)
+
+For the transcriptomics also make data frames with only experimental
+details and only with values. Note the experimental details can be found
+at the end of the data frame. Also make and add the Group variable to
+the df with experimental details [1].
+
+```{r Assignment 1B, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### To make sure the transcriptomics values are considered numeric, run the next line:
+
+```{r Make transcriptomics counts numeric}
+df_transcriptomics_Values = as.data.frame(apply(df_transcriptomics_Values, 2, function(x) as.numeric(as.character(x))))
+```
+
+#### 1C)
+
+Many genes only have counts in few rats. Find genes that have nonzero
+counts for more than 25 rats. Use the apply function to first calculate
+for each gene the number of samples having nonzero counts. Then select
+those genes for which this number is larger than 25. Make a new data
+frame df_transcriptomics_Filtered that only contains these genes. [1]
+
+```{r Assignment 1C,Filter genes, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### 1D)
+
+Now write the metabolomics_Values, metabolomics_Exp,
+transcriptomics_Filtered and transcriptomics_Exp data frames into new
+csv files in your working directory. [2]
+
+```{r Assignment 1D, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+Check whether the files were written correctly. Now you have cleaned
+metabolomics and transcriptomics data which you will explore in the next
+assignments.
+
+#### 1E)
+
+1.  Calculate the total sum of the normalized values per row and per
+    column of the filtered transcriptome data set using the rowSums()
+    and colSums() functions. [1]\
+2.  Plot the log of the row and column sums of the filtered
+    transcriptomics data in a histogram in a figure with 2 subfigures.
+    Add labels for the x-axis and titles for each subfigure. [1]\
+
+```{r Assignment 1E, include=TRUE, eval=TRUE, echo=TRUE}
+
+```
+
+#### 1F): Interpretation.
+
+Write down for each plot what you can learn about the samples and
+variables in the data sets.[2]\
+Add information of - the meaning of a row sum and of a column sum for
+these data. - what does it mean when the sum of all values of a sample
+or of a feature is larger than of another sample or feature? - Why is it
+useful to plot the log of the row and column sums?
+
+#### Put any text for Interpretation 1F here.
+
+#### End of text block.
+
+#### 1G)
+
+1.  Calculate the column mean and column standard deviation for the
+    filtered transcriptomics data sets using the apply() function. [1]\
+2.  Make a scatter plot in which the log(standard deviation) is plotted
+    vs the log(mean) of each variable for the transcriptomics
+    dataset.[1]\
+
+```{r Assignment 1G, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### 1H): Interpretation.
+
+1.  Explain what is the meaning of the standard deviation of a gene.
+    Take into account the knowledge you have about the samples [1].
+2.  Explain what information about the data is provided by the
+    scatterplot of Exercise 1G. [1]\
+
+#### Put your interpretation 1H here.
+
+#### End of text block.
+
+#### 1I)
+
+Now we go back to the metabolomics data.
+
+1\. Make a new variable that only contains the Alanine levels of the
+rats. [0.5]\
+2. Meancenter the Alanine levels of the new variable. [0.5]\
+3. Scale the meancentered Alanine levels of the new variable with its
+standard deviation. [0.5]\
+4. Plot the raw, only meancentered and meancentered and scaled Alanine.
+levels in a figure with 3 subplots and add the correct labels on the
+axes. [0.5]\
+
+#### Put your code here
+
+```{r Assignment 1I, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### 1J): Interpretation.
+
+1.  Explain what centering does to your variable. [1]\
+2.  Explain what the combination of centering and scaling does to your
+    data. [1]\
+
+#### Put any text for interpretation 1J here.
+
+#### End of text block.
+
+The combination of meancentering and scaling by the standard deviation
+of each column in a matrix is often used in data analysis. It is known
+by different names, e.g. unit variance scaling, auto scaling,
+standardization. The standardized values are also known as z-scores.
+
+#### 1K)
+
+Standard deviations of metabolite levels.
+
+1\. Calculate the standard deviation of each metabolite over all samples
+and make a histogram of the standard deviations of the metabolomics
+columns, [1].
+
+2\. Discuss what you can learn from the histogram, and how this
+information is used with respect to scaling the data. [1]
+
+```{r Assignment 1K, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+**Put your discussion what you can learn for the histogram here.**
+
+**End of discussion**
+
+### This concludes Assignment 1.
+
+Make sure you save your .Rmd file and workspace so you can continue in
+your next project session
+
+### Assignment 2: Gene expression analysis (Douwe Molenaar, 6-01-2026)
+
+In the previous assignment, you explored the expression data of the rats
+in terms of counts of mRNA of specific genes. In this assignment we will
+look for genes that are different between the Control group and the
+Training group at 8 weeks. From the MotrPac website, the
+Blood_RNA_Normalized_C8_T8.csv data file was obtained that only consists
+of the rats of the training group at 8 weeks and the rats of the control
+group. Specific normalization was already applied. In assignment 2 we
+will use these data.
+
+Load the normalized datafile Blood_RNA_Normalized_C8_T8.csv from Canvas.
+
+```{r load normalized gene expression data }
+df_transcriptomics_Filtered_Norm = read.csv("Blood_RNA_Normalized_C8_T8.csv", row.names = 1)
+```
+
+#### 2A)
+
+Transpose the data and remove the sex variable.[1]
+
+```{r Assignment 2A, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### 2B)
+
+1.  Check whether the data is homoscedastic by plotting the log of the
+    std vs the log of the mean per group.[1]
+2.  Make indexes for the control group and the 8week training group[0.5]
+3.  Calculate the mean and std per group for each gene.[0.5]
+4.  Plot the std vs the mean in a loglog plot.[1]
+
+```{r Assignment 2B, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+#1
+
+#2
+
+#3
+
+#4
+#Plot results for control samples in blue and the 8week training samples in red
+
+```
+
+#### 2C: Interpretation
+
+1.  Explain what kind of figure you would have expected for
+    homoscedastic data.[1]
+2.  Conclude about the homoscedasticity of this data based on the figure
+    you obtained.[1]
+
+#### Give your explanation and conclusion here
+
+In the next assignments we will apply tests to find genes related to
+training by comparing the control group with the group of rats that
+trained 8 weeks.
+
+#### 2D)
+
+First we filter Genes for which there is almost no difference between
+the samples (standard deviation \< 0.1) as these will provide problems
+in the t-test. This can occur when e.g. for one of the group all rats
+had zero counts. 1. Calculate the standard deviation for each gene over
+all samples.[1] 2. Only keep those genes with a standard deviation
+larger than 0.1.[1]
+
+```{r Assignment 2D , include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### 2E)
+
+Perform a t-test of the expression of Gene ENSRNOG00000000024 between
+the Control and Training 8 weeks conditions. [1]\
+
+```{r Assignment 2E , include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### 2F) Interpretation.
+
+1.  What is the hypothesis being tested? [1]\
+2.  What does this p-value mean? [0.5]\
+3.  What is your conclusion from the test result? [0.5]\
+
+#### Put any text for Interpretation 2F here.
+
+#### End of text block.
+
+#### 2G)
+
+1.  Perform a t-test for every gene in the gene expression dataset for
+    Control and 8 weeks training using the apply() function, and store
+    the p-value output of the t-test in a vector. [0.5]\
+2.  Which gene has the smallest p-value? [0.5]
+
+```{r Assignment 2G, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Put any text for Interpretation 2G here.
+
+#### End of text block
+
+#### 2H)
+
+1.  Make a histogram of all the p-values. Make a rough guess of how many
+    positives are present in your set of genes? [1]
+
+<!-- -->
+
+2)  How many false positives do you expect given the p-value histogram?
+    [1]
+
+```{r Assignment 2H, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Put any text for interpretation 2H here.
+
+#### End of text block.
+
+Our gene expression data is already normalized and log transformed, so
+we can instead calculate the fold change using the averages between the
+two conditions.\
+
+#### 2I)
+
+Calculate the fold change of all genes between Control and 8 weeks
+training conditions this way. [1]
+
+```{r Assignment 2I, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+As you may be aware, you have now done almost 14.000 t-tests. As such,
+you will need to control for Type I error. In the exercises you did
+before the project part of today's computer practical you have
+calculated the FDR value for any p-value and plotted them. An easy
+function to obtain the FDR values is p.adjust().
+
+#### 2J)
+
+1.  Calculate the adjusted p-values using the p-adjust() function. [1]\
+2.  Make a volcano plot using your Fold change and adjusted p-values for
+    every gene in a similar way as was done in the exercises of this
+    topic. [1]\
+3.  Set a threshold for both the adjusted p-value and for the Fold
+    Change, add lines to the plot indicating the threshold values and
+    show the genes that are differentially expressed according to your
+    thresholds in a different color. [1]\
+
+```{r Assignment 2J, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+# Calculate adjusted p-values
+
+# Make Volcano plot
+
+# set thresholds and find differentially expressed genes
+```
+
+#### Put any text you may want to type here.
+
+#### End of text block.
+
+#### 2K) Interpretation.
+
+1.  Explain what it means to control the type I error of your p-values
+    using a false discovery rate. [1]\
+2.  Find the name of your most important gene and describe its function.
+    [1]\
+
+#### Put any text for interpretation 2k here.
+
+#### End of text block.
+
+#### This concludes Assignment 2.
+
+Make sure you save your .Rmd file and workspace so you can continue in
+your next project session.
+
+### Assignment 3: Principal Component Analysis (Gustavo Stolf Jeuken, 8-01-2026)
+
+During this Assignment, you will perform Principal Component Analysis on
+both the gene expression and metabolomics data containing all
+conditions. You will investigate groupings in the score plots, and have
+a look at important variables distinguishing male and female rats, as
+well as features that can distinguish the different training durations.
+
+#### 3A)
+
+0.  Load the Metabolomics_Exp and Metabolomics_Values data again and
+    meancenter your data.
+1.  Perform a principal component analysis on the meancentered
+    metabolomics data using the svd() function. [1]\
+2.  Make a scatter plot of the scores using the first and second
+    principal component. Provide the scores of each treatment group in a
+    different color. [1]\
+3.  Calculate the variance explained for each component. [0.5]
+4.  Show the variance explained of each component in your plot labels.
+    [0.5]\
+5.  Add a legend to identify the colour for each condition using the
+    legend() function. [0.5]\
+6.  Also make another scoreplot, similar to the first one, but now plot
+    the different sexes in different colors [0.5].
+
+```{r Assignment 3A, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+#0 
+
+#1 
+
+#2
+
+#3
+
+#4
+
+#5
+
+#6
+
+```
+
+#### Put any text you may want to type here.
+
+#### End of text block.
+
+#### 3B: Interpretation.
+
+1.  What is your interpretation? Which source of variation is dominating
+    the metabolomics data [1]? Include the percentage of variation
+    explained per component in your answer.
+2.  Discuss whether there is an effect of training in the metabolomics
+    data, and if so, how it can be observed. [1]
+
+#### Put any text for Interpretation 3B here.
+
+#### End of text block.
+
+#### 3C: Loading plot.
+
+The loadings of the PCA link the variation found in between the rats to
+the metabolites being measured. To circumvent a very crowded loading
+plot, only plot the metabolite names of the 30 most important loadings.
+$Importance_j =\sqrt(p_{1j}^2 + p_{2j}^2)$. 1: Calculate importance of
+each metabolite.[1] 2: Select the 30 metabolites with highest
+importance.[2] 1. Make a scatter plot with the names of the important
+metabolites.[1] 2. Add again the percentage explained per PC along the
+axes.
+
+```{r Assignment 3C Loading plot, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+#1 
+
+#2
+
+#3
+
+```
+
+#### 3D) Interpretation
+
+1.  From the loading plot select some metabolites that are affected by
+    training. Discuss why these metabolites could be affected [1].
+2.  From the loading plot select some metabolites that are affected by
+    Sex. Discuss why these metabolites could be affected.[1]
+
+#### Name some metabolites and give an explanation
+
+#### End of text block.
+
+#### 3E)
+
+1.  Reconstruct your metabolomics dataset using only the first and
+    second PCs. [1]\
+2.  Calculate the residual matrix of the metabolomics data by
+    subtracting the reconstructed data from the original data. [0.5]\
+3.  Calculate the Sum of squares of the residuals by first squaring all
+    values in the residual matrix and then summing all these values [1]\
+4.  Show that the explained variation and the residual variation add up
+    to the total variation of the original data [.5]\
+
+```{r Assignment 3E, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### 3F)
+
+1.  Calculate the sum of of the squared residuals over all rows and make
+    a bar chart of these sums. Indicate the female rats and male rats
+    with different color to show whether there is a Sex difference in
+    residual variation, and add a legend. [1]\
+2.  Calculate the sum of of the squared residuals over all columns and
+    make a bar chart of these sums.[1]\
+
+```{r Assignment 3F, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Put any text you may want to type here.
+
+#### End of text block.
+
+#### 3G
+
+1.  Which rat has the highest residual variation? [1]
+
+2.  Which variable has the highest contribution to the residuals for
+    this rat? [1]\
+
+3.  If we define that the variable with the highest % explained
+    variation is the best modeled variable, then which variable has been
+    modeled the best in the PCA model with 2 PCs? [1]\
+
+#### Put any text you may want to type here.
+
+```{r 3G, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### That concludes week 1 of the project!
+
+Please hand in your .rmd and pdf files on Canvas for your pass/fail
+grade and feedback. The week 1 deadline is Tuesday January 13, 8:00 (AM)
+
+### Assignment 4: Clustering (Gustavo Stolf Jeuken, 13-01-2026)
+
+In this assignment, you will focus on clustering your metabolomics data.
+This will be done using hierarchical clustering, kmeans and UMAP
+methods.\
+
+In the code block below, some functions are defined for you to use in
+subsequent questions. You do not need to understand what happens in this
+code. Do not edit the code block!
+
+#### 4A)
+
+Import the metabolomics_Values and metabolomics_Exp data again using the
+read.csv() function.
+
+```{r Assignment 4A, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### 4B)
+
+1.  Meancenter and scale the metabolomics data before clustering using
+    the scale function. [1]
+2.  Calculate the Euclidean distances between the samples in the
+    centered and scaled metabolomics expression data using the dist
+    function. [0.5]\
+3.  Use the hclust function to calculate the hierarchical clustering
+    from the Euclidean distance matrix using average linkage.[0.5]\
+4.  Plot the hierarchical clustering dendrogram with labels indicating
+    Sex [0.5]
+5.  5\. Plot the hierarchical clustering dendrogram with labels
+    indicating Group [0.5]
+
+```{r Assignment 4B, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Put any text you may want to type here.
+
+#### End of text block.
+
+#### 4C) Interpretation.
+
+1.  Discuss your interpretation of the cluster result. Focus on how well
+    the Rats with respect to Sex and Groups are clustered. [1]\
+2.  Discuss the differences between the clustering and the PCA results.
+    [1]\
+
+#### Put any text for interpretation 4C here.
+
+#### End of text block.
+
+#### 4D)
+
+Now perform a hierarchical clustering of the METABOLITES of the
+meancentered and scaled version of the metabolomics data using Euclidean
+distance and average linkage and plot the dendrogram using the
+plot_hclust function. To keep the plots visible only apply this on the
+first 36 metabolites, which are amines. [2]\
+
+```{r Assignment 4D, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Put any text you may want to type here.
+
+#### End of text block.
+
+#### 4E)
+
+1.  Select 2 different clusters of two metabolites (e.g. Isoleucine and
+    Leucine, and Ethanolamine and Hydroxylysine) and plot their
+    metabolites levels in a scatter plot to explore their similarity.[2]
+2.  Discuss the difference in interpretation when clustering samples
+    (experimental conditions) or clustering variables (metabolites). [1]
+
+```{r Assignment 4E}
+
+```
+
+#### Put any text for interpretation of 4E2 here.
+
+#### End of text block.
+
+#### 4F)
+
+1.  Perform a kmeans clustering with 2 clusters and 5 clusters of the
+    samples of the metabolomics. [1]\
+2.  Make a table of clusters vs experimental groups for both
+    clusterings. [1]
+3.  Apply kmeans to cluster metabolites. Only select the first 36
+    metabolites which are the Amines. Vary the number of clusters based
+    on the results in 4D. Show which Amines are grouped in the
+    clusters.[1]\
+
+```{r Assignment 4F, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Put any text you may want to type here.
+
+#### End of text block.
+
+#### 4G) Interpretation.
+
+1.  Summarize the kmeans result. Which experiments are clustered
+    together? [1]\
+2.  Compare the kmeans cluster result with the PCA result. Discuss
+    differences and similarities. [1]\
+3.  Compare the hierarchical cluster result of the samples with the
+    kmeans result. Discuss differences and similarities. [1]\
+
+#### Put any text you may want to type here.
+
+#### End of text block.
+
+#### 4H) UMAP.
+
+1.  Apply a UMAP on the samples of the centered and scaled metabolomics
+    data. Vary the number of neighbours until you have a "good" result.
+    [0.5]\
+2.  Apply a UMAP on the metabolites. For simple visualization reasons
+    only use the first 36 metabolites, which are amines. Vary the number
+    of neighbours until you have a "good" result.[0.5]
+
+Note! Fix the random state such that the same can be repeated!
+
+```{r Assignment 4H, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Put any text you may want to type here.
+
+#### End of text block.
+
+#### 4I) Interpretation.
+
+1.) What is your interpretation of the UMAP clusters of the metabolite
+samples.[1]\
+2.) What is your interpretation of the UMAP clusters of the metabolites
+in comparison with kmeans and hierarchical clustering.[1]\
+3.) Discuss the differences between UMAP and k-means or hierarchical
+clustering. [1]\
+
+#### Put any text you may want to type here.
+
+#### End of text block.
+
+#### This concludes Assignment 4.
+
+Make sure you save your .Rmd file and workspace so you can continue in
+your next project session.
+
+### Assignment 5: Classification (Johan Westerhuis, 15-01-2023)
+
+In this assignment we will use the LDA and PCDA methods to find the
+metabolites that best discriminate between Control and 8 weeks training
+conditions.\
+
+#### 5A)
+
+0)  Load the df_metabolomics_Values and the df_metabolomics_Exp
+    datasets.
+1)  Make a reduced metabolomics dataset by selecting only the samples of
+    Training 8 weeks and Control 8 weeks. [1]\
+2)  For visualization purposes, only select metabolites 80 (CAR(10:0-OH)
+    until metabolite 613 (TG 60:4). These are lipids obtained with
+    reversed phase liquid chromatography positive mode.[1]
+3)  Center and scale this data set again. [1]\
+4)  Create a vector of binary values encoding the condition of each
+    sample (0 = Control 8 weeks and 1 = Training 8 weeks). [1]\
+
+```{r Assignment 5A, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Put any text you may want to type here.
+
+#### End of text block.
+
+#### 5B)
+
+Perform a linear discriminant analysis on your new metabolomics dataset,
+using your new vector of binary values as the class of each sample. [2]
+
+```{r Assignment 5B, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Put any text you may want to type here.
+
+#### End of text block.
+
+#### 5C) Interpretation.
+
+You should have gotten a warning from your LDA function. Explain this
+warning. [2]\
+
+#### Put any text for Interpretation 5c here.
+
+#### End of text block.
+
+#### 5D)
+
+To solve the problem being discussed in 5C, you will make a PCDA model
+instead of an LDA model.
+
+1\. Apply Principal Component Analysis using the svd function and select
+three components. [2]\
+2. Make scoreplots of PC1 vs PC2 and PC2 vs PC3 in which the samples are
+colored based on their group. [1]\
+3. Which of the PCs seems most useful for the discrimination between the
+two groups? Think of a way to quantify this. [2]
+
+```{r Assignment 5D, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+# PCA
+
+# scoreplot PC1 vs PC2
+
+# scoreplot PC2 vs PC3
+
+#3
+
+```
+
+#### 5E)
+
+1.  Make a PCDA model using the PCA scores and the vector of binary
+    class labels .[1]\
+2.  Calculate the PCDA regression coefficients of each variable.[1]\
+3.  What are the names of the 5 most important metabolites based on
+    their absolute PCDA regression coefficients. [1]\
+4.  Use the PCDA regression coefficients to make a prediction for each
+    rat whether they belong to the control or training group.[1] 5. How
+    many misclassifications did you make? [1]
+
+```{r Assignment 5E, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### How many misclassifications did you make?
+
+#### End of text block.
+
+#### 5F) Interpretation.
+
+1.  Discuss the similarities and differences between the PCA and PCDA.
+    [1]\
+2.  Discuss the difference between using t-test to make a Volcano plot
+    and using PCDA to calculate important metabolites [1].
+
+#### Put any text for interpretation 5F here.
+
+#### End of text block.
+
+### Assignment 6: ASCA (Johan Westerhuis, 16-01-2026)
+
+For ASCA we will use the HDANOVA and the mixlm packages. Obtain the
+latest version from CRAN.
+
+```{r}
+install.packages("mixlm")
+install.packages("HDANOVA") 
+
+library(mixlm)
+library(HDANOVA)
+```
+
+Load the metabolomics_Values and the metabolomics_Exp files again on
+which the ASCA model will be applied. Use the same set of features as in
+the Classification assignment.
+
+#### 6A)
+
+Apply preprocessing of your data. Consider transformation, centering
+and/or scaling the data. Make plots of the data (before and after the
+preprocessing steps) to defend your choices. [3]
+
+#### Add code for figures here
+
+```{r Assignment 6A, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Add arguments here
+
+#### 6B) Data handling
+
+Make the data from wide to long format that is necessary for the asca
+function in the HDANOVA package. Make sure the factors Sex and Group are
+defined as factors. (See ASCA exercise) [2]
+
+```{r Assignment 6B, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+
+```
+
+#### 6C) ASCA model:
+
+1)  Create an ASCA model using the only the main factors Sex and Group.
+    Do not consider interaction terms yet. [1]
+2)  Explain the meaning of Sum.Sq and Expl.var. from the ASCA table, and
+    explain how they are calculated. [1]
+3)  What is your interpretation of the ASCA model? [1]
+
+```{r Assignment 6C, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Give explanation and interpretation here
+
+#### End of interpretation
+
+#### 6D)
+
+1.  Show score and loading plots of PC1 vs PC2 of the Group factor.
+    [0.5]
+2.  Show the loading plots of PC1 vs PC2 of the Group factor. Only show
+    the 20 most important variables where
+    $Importance_j =\sqrt(p_{1j}^2 + p_{2j}^2)$. [1.5]
+3.  Give your interpretation of the score and loading plots. [1]
+
+```{r Assignment 6D, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Give interpretation of 6D3 here
+
+#### 6E) Add the two-factor interaction Sex:Group to your model.
+
+1.  Make a new model in which the two-factor interaction Sex:Group is
+    also included in the model.[1]
+2.  What is your conclusion of this ASCA model with interaction? [1]
+
+```{r Assignment 6E ASCA permutation analysis, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Give your conclusion of the interaction model
+
+#### End of conclusion
+
+#### 6F: Statistical Inference
+
+1.  To conclude whether the main factors and interaction are
+    significant, apply a permutation test and plot the permutation
+    result using the permutation plot function for both main factors and
+    the interaction.[1]
+2.  Explain why in ASCA a permutation test is used and not an F-test.[1]
+3.  What is your interpretation of the permutation test? [1]
+
+```{r Assignment 6F ASCA permutation analysis, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Give explanation of 6F2 here
+
+#### Give interpretation of 6F3 permutation test here
+
+#### 6G)
+
+When exploring the model with interaction, it is common to combine the
+interaction effect with one of the main factor effects to improve
+interpretation.
+
+1\. Make an ASCA model in which the Sex:Group interaction effect is
+combined with the main Group effect.[1]
+
+2.  Make two score plot (using the timeplot function) of the combination
+    effect. In the first the PC1 scores of the Females and Males are
+    plotted as a function of the Groups. In the second the PC1 scores of
+    the Groups are plotted as a function of the Females and Males.[1]
+
+Make two score plot (using the timeplot function) of the combination
+effect. In the first the PC1 scores of the Females and Males are plotted
+as a function of the Groups. In the second the PC1 scores of the Groups
+are plotted as a function of the Females and Males.[1]
+
+3\. Make a loading plot for PC1 of the combination effect [1].
+
+4\. What is your interpretation of the combination effect (Group +
+Sex:Group) [1]
+
+```{r Assignment 6G ASCA Combination model, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+```
+
+#### Give your interpretation of 6G4 here
+
+#### This concludes Assignment 6.
+
+Make sure you save your .Rmd file and workspace so you can continue in
+your next project session.
+
+#### That concludes week 2 of the project!
+
+Please hand in your .rmd and .pdf files on Canvas for your project
+grade. The week 2 deadline is Tuesday January 20, 08:00 (AM).\*\*\*

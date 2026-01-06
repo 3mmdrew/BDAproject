@@ -25,7 +25,7 @@ editor_options:
 Welcome to the BDA project 2025-2026 syllabus. In this document you will
 find all the information you need to do your BDA project.\
 
-The main goals of the Project are to learn how to:
+The main goals of the Project are to learn how to :
 
 1.  analyze your data using common data analysis methods,\
 2.  visualize the results of the analysis methods,\
@@ -308,6 +308,9 @@ print(df_transcriptomics[1:7, c(1:8)])
     "Plasma_Metabolomics_Normalized.csv" will not be changed.
 
 ```{r Assignment 1A, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+df_metabolomics_Exp <- df_metabolomics %>% select(Experiment.Group:Rat.Sex)
+df_metabolomics_Exp$GroupTime <-paste(df_metabolomics_Exp$Experiment.Group, df_metabolomics_Exp$Experiment.Time, sep = " ")
+
 
 
 ```

@@ -431,9 +431,22 @@ these data. - what does it mean when the sum of all values of a sample
 or of a feature is larger than of another sample or feature? - Why is it
 useful to plot the log of the row and column sums?
 
-#### Row sums represent total gene expression counts per rat (sequencing depth or library size), whereas the column sums represent the total counts per gene across all rats [the overall gene expression level]. Larger row sums indicate higher sequencing depth for a sample, which typically reflects technical variation rather than biological diffs. Larger column sums can indicate more highly expressed genes. Log transformation is essential as the gene data spans many orders of magnitude and without it the histogram would be dominated by extrem values. The log values are useful as they compress the scale, make outliers visible, and help identify the type of distribution the data best resembles. The row sum histogram is expected to show relatively consistent sequencing depth across samples, whereas the column sum histogram is expected to show more variation due to natural genetic variation in expression levels.
+#### Interpretation
 
-#### End of text block.
+Row sums represent total gene expression counts per rat (sequencing
+depth or library size), whereas the column sums represent the total
+counts per gene across all rats [the overall gene expression level].
+Larger row sums indicate higher sequencing depth for a sample, which
+typically reflects technical variation rather than biological diffs.
+Larger column sums can indicate more highly expressed genes. Log
+transformation is essential as the gene data spans many orders of
+magnitude and without it the histogram would be dominated by extrem
+values. The log values are useful as they compress the scale, make
+outliers visible, and help identify the type of distribution the data
+best resembles. The row sum histogram is expected to show relatively
+consistent sequencing depth across samples, whereas the column sum
+histogram is expected to show more variation due to natural genetic
+variation in expression levels.
 
 #### 1G)
 
@@ -481,9 +494,20 @@ text(x = max(log(col_means)) - 1,
 2.  Explain what information about the data is provided by the
     scatterplot of Exercise 1G. [1]\
 
-#### Put your interpretation 1H here.
+#### Interpretation
 
-#### End of text block.
+The standard deviation of a gene measures how much that gene’s
+expression level varies across the samples. Since each gene is measured
+in multiple samples, the standard deviation quantifies the variability
+of expression from sample to sample. A low standard deviation indicates
+that the gene is expressed at a similar level across all samples,
+suggesting stable or constitutive expression. A high standard deviation
+indicates strong variability in expression.
+
+Overall, the plot reveals **heteroskedasticity** in the data:
+variability increases with expression level, a characteristic feature of
+transcriptomics data that motivates variance-stabilizing transformations
+and specialized statistical models.
 
 #### 1I)
 
@@ -543,14 +567,22 @@ par(mfrow = c(1, 1))
 2.  Explain what the combination of centering and scaling does to your
     data. [1]\
 
-#### Put any text for interpretation 1J here.
+#### Interpretation
 
-#### End of text block.
+Centering subtracts the mean of the Alanine levels from each individual
+observation. As a result, the new variable has a mean of zero, and all
+values represent deviations from the average Alanine level across
+samples. Centering shifts the data along the y-axis but doesn't change
+the relative distances between observations or the overall spread of the
+data.
 
-The combination of meancentering and scaling by the standard deviation
-of each column in a matrix is often used in data analysis. It is known
-by different names, e.g. unit variance scaling, auto scaling,
-standardization. The standardized values are also known as z-scores.
+Centering and scaling (standardization) transforms the data into
+z-scores by dividing the centered values by the standard deviation. This
+results in a variable with mean zero and standard deviation one. Each
+value now represents how many standard deviations it lies above or below
+the mean. This makes the data dimensionless and directly comparable to
+other metabolites, ensuring that differences in scale do not dominate
+multivariate analyses.
 
 #### 1K)
 
@@ -583,9 +615,17 @@ legend("topright",
        cex = 0.8)
 ```
 
-**Put your discussion what you can learn for the histogram here.**
+The histogram shows that most metabolites have relatively low and
+moderate standard deviations, with some higher variability in the tail
+of the right-skewed distribution. This indicates that variability
+differs substantially between metabolites. Many metabolites are fairly
+stable across samples, whereas a few vary strongly, possibly due to
+biological regulation or technical effects.
 
-**End of discussion**
+This information is important for scaling as metabolites with large
+standard deviations would dominate downstream analyses simply because of
+their larger variance. Scaling ensures that each metabolite contributes
+equally to the analysis regardless of its original variability.
 
 ### This concludes Assignment 1.
 
@@ -614,7 +654,8 @@ df_transcriptomics_Filtered_Norm = read.csv("Blood_RNA_Normalized_C8_T8.csv", ro
 Transpose the data and remove the sex variable.[1]
 
 ```{r Assignment 2A, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
-
+df_transposed = as.data.frame(t(df_transcriptomics_Filtered_Norm))
+df_transposed$sex = NULL
 ```
 
 #### 2B)
@@ -625,16 +666,30 @@ Transpose the data and remove the sex variable.[1]
 3.  Calculate the mean and std per group for each gene.[0.5]
 4.  Plot the std vs the mean in a loglog plot.[1]
 
-```{r Assignment 2B, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+```{r Assignment 2B, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE, warning=FALSE}
 #1
+mean = apply(df_transposed, 2, mean)
+std = apply(df_transposed, 2, sd)
+
+plot(log10(mean), log10(std), col = "blue", pch = 16,
+     xlab = "log10(mean)", ylab = "log10(std)", 
+     main = "Homoscedasticity Check: log(std) vs log(mean)")
 
 #2
-
+control_idx = grep("^Control", rownames(df_transposed))
+training_idx = grep("^Training", rownames(df_transposed))
 #3
-
+mean_control = apply(df_transposed[control_idx, ], 2, mean)
+std_control = apply(df_transposed[control_idx, ], 2, sd)
+mean_training = apply(df_transposed[training_idx, ], 2, mean)
+std_training = apply(df_transposed[training_idx, ], 2, sd)
 #4
-#Plot results for control samples in blue and the 8week training samples in red
-
+plot(log10(mean_control), log10(std_control), col = "blue", pch = 16,
+     xlab = "log10(mean)", ylab = "log10(std)", 
+     main = "Homoscedasticity Check: log(std) vs log(mean)")
+points(log10(mean_training), log10(std_training), col = "red", pch = 16)
+legend("topleft", legend = c("Control", "Training 8 weeks"), 
+       col = c("blue", "red"), pch = 16)
 ```
 
 #### 2C: Interpretation
@@ -644,7 +699,20 @@ Transpose the data and remove the sex variable.[1]
 2.  Conclude about the homoscedasticity of this data based on the figure
     you obtained.[1]
 
-#### Give your explanation and conclusion here
+#### Interpretation
+
+For homoscedastic data, we would expect to see points scattered randomly
+around a horizontal line in the log(std) vs log(mean) plot, with no
+clear pattern or trend. The standard deviation would remain relatively
+constant across all mean values, meaning the variance does not depend on
+the mean. The points would show no systematic increase or decrease in
+log(std) as log(mean) changes. The data is heteroscedastic (not
+homoscedastic). The plot shows a mildly negative linear relationship
+between log(std) and log(mean), indicating that genes with higher mean
+expression have proportionally lower standard deviation. This means the
+variance decreases with the mean expression level. This
+heteroscedasticity violates the assumption of constant variance required
+for many statistical tests. \#### End of text block
 
 In the next assignments we will apply tests to find genes related to
 training by comparing the control group with the group of rats that
@@ -660,7 +728,10 @@ all samples.[1] 2. Only keep those genes with a standard deviation
 larger than 0.1.[1]
 
 ```{r Assignment 2D , include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
-
+gene_sd = apply(df_transposed, 2, sd)
+df_filtered = df_transposed[, gene_sd > 0.1]
+cat("Original number of genes:", ncol(df_transposed), "\n")
+cat("Filtered number of genes:", ncol(df_filtered), "\n")
 ```
 
 #### 2E)
@@ -669,7 +740,11 @@ Perform a t-test of the expression of Gene ENSRNOG00000000024 between
 the Control and Training 8 weeks conditions. [1]\
 
 ```{r Assignment 2E , include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
-
+gene_name = "ENSRNOG00000000024"
+control_expr = df_filtered[control_idx, gene_name]
+training_expr = df_filtered[training_idx, gene_name]
+t_test_result = t.test(control_expr, training_expr)
+print(t_test_result)
 ```
 
 #### 2F) Interpretation.
@@ -680,7 +755,13 @@ the Control and Training 8 weeks conditions. [1]\
 
 #### Put any text for Interpretation 2F here.
 
-#### End of text block.
+The null hypothesis is that there is no difference in mean expression of
+gene ENSRNOG00000000024 between Control and Training groups. The p-value
+represents the probability of observing a difference as extreme as (or
+more extreme than) what we observed, assuming the null hypothesis is
+true. With a p-value of 0.01292, we reject the null hypothesis and
+conclude there is a significant difference in expression between groups.
+\#### End of text block.
 
 #### 2G)
 
@@ -690,12 +771,22 @@ the Control and Training 8 weeks conditions. [1]\
 2.  Which gene has the smallest p-value? [0.5]
 
 ```{r Assignment 2G, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+p_values = apply(df_filtered, 2, function(gene_expr) {
+  t_test = t.test(gene_expr[control_idx], gene_expr[training_idx])
+  return(t_test$p.value)
+})
+
+# Find gene with smallest p-value
+min_p_gene = names(which.min(p_values))
+cat("\nGene with smallest p-value:", min_p_gene, "\n")
+cat("P-value:", min(p_values), "\n")
 
 ```
 
 #### Put any text for Interpretation 2G here.
 
-#### End of text block
+The gene with the smallest p-value is identified as "ENSRNOG00000005576"
+which has a p-value of 3.029946e-06. \#### End of text block
 
 #### 2H)
 
@@ -708,12 +799,25 @@ the Control and Training 8 weeks conditions. [1]\
     [1]
 
 ```{r Assignment 2H, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+hist(p_values, breaks = 50, col = "lightblue", border = "white",
+     xlab = "P-value", main = "Distribution of P-values from T-tests")
+n_tests = length(p_values)
+n_sig = sum(p_values < 0.05)
+expected_false_pos = n_tests * 0.05
 
+cat("\nTotal tests:", n_tests, "\n")
+cat("Significant at p < 0.05:", n_sig, "\n")
+cat("Expected false positives (5% of", n_tests, "):", expected_false_pos, "\n")
+cat("Estimated true positives:", n_sig - expected_false_pos, "\n")
 ```
 
 #### Put any text for interpretation 2H here.
 
-#### End of text block.
+Over 13900 total tests, 2748 were significant at a p-value less than
+0.05. We calculate the expected false positives by finding the excess
+above the 5% expected true positives. The Expected false positives are
+5% of the 13900, which is 695, therefore the estimated true positives
+are 2089. \#### End of text block.
 
 Our gene expression data is already normalized and log transformed, so
 we can instead calculate the fold change using the averages between the
@@ -725,7 +829,9 @@ Calculate the fold change of all genes between Control and 8 weeks
 training conditions this way. [1]
 
 ```{r Assignment 2I, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
-
+mean_control_all = apply(df_filtered[control_idx, ], 2, mean)
+mean_training_all = apply(df_filtered[training_idx, ], 2, mean)
+fold_change = mean_training_all - mean_control_all
 ```
 
 As you may be aware, you have now done almost 14.000 t-tests. As such,
@@ -747,10 +853,32 @@ function to obtain the FDR values is p.adjust().
 
 ```{r Assignment 2J, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
 # Calculate adjusted p-values
+adj_p_values = p.adjust(p_values, method = "fdr")
+p_threshold = 0.05
+fc_threshold = 0.5  # Adjust based on your data
+sig_genes = (adj_p_values < p_threshold) & (abs(fold_change) > fc_threshold)
 
 # Make Volcano plot
+plot(-log10(adj_p_values) ~ fold_change,
+     col = ifelse(sig_genes, "red", "gray"),
+     pch = 16, cex = 0.8,
+     xlab = "Fold Change (log2)",
+     ylab = "-log10(Adjusted P-value)",
+     main = "Volcano Plot: Control vs Training (8 weeks)")
 
 # set thresholds and find differentially expressed genes
+abline(h = -log10(p_threshold), col = "blue", lty = 2, lwd = 2)
+abline(v = c(-fc_threshold, fc_threshold), col = "blue", lty = 2, lwd = 2)
+legend("topright", 
+       legend = c("Significant", "Not significant"), 
+       col = c("red", "gray"), pch = 16)
+cat("\nNumber of differentially expressed genes:", sum(sig_genes), "\n")
+
+# Most significant gene
+most_sig_gene = names(which.min(adj_p_values))
+cat("Most significant gene:", most_sig_gene, "\n")
+cat("Adjusted p-value:", min(adj_p_values), "\n")
+cat("Fold change:", fold_change[most_sig_gene], "\n")
 ```
 
 #### Put any text you may want to type here.
@@ -765,6 +893,24 @@ function to obtain the FDR values is p.adjust().
     [1]\
 
 #### Put any text for interpretation 2k here.
+
+False Discovery Rate (FDR) control: When performing multiple tests, the
+FDR controls the expected proportion of false positives among all
+significant results. FDR is appropriate for exploratory analyses like
+gene expression studies where we expect many true positives. For
+example, an FDR-adjusted p-value \< 0.05 means we expect less than 5% of
+our significant results to be false positives. The most important gene
+was found to be "ENSRNOG00000004487" with an adjusted p-value of
+0.01565575 and a fold change of 1.181462. According to GeneGlobe the
+gene is *"Predicted to enable protein kinase activity and protein
+phosphatase binding activity. Predicted to be involved in centrosome
+separation; protein autophosphorylation; and regulation of cell cycle
+process. Predicted to act upstream of or within several processes,
+including blastocyst development; mitotic spindle assembly; and positive
+regulation of telomere maintenance. Predicted to be located in several
+cellular components, including condensed chromosome; microtubule
+cytoskeleton; and midbody."*
+\*[source](https://geneglobe.qiagen.com/us/knowledge/gene/ENSRNOG00000004487)
 
 #### End of text block.
 

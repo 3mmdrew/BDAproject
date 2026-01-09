@@ -215,6 +215,9 @@ library(umap)
 library(MASS)
 library(gtools)
 library(stringr)
+library(ggplot2)
+library(tidyr)
+library(gridExtra)
 ```
 
 ### The MoTrPAC data
@@ -310,6 +313,12 @@ print(df_transcriptomics[1:7, c(1:8)])
 ```{r Assignment 1A, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
 df_metabolomics_Exp <- df_metabolomics %>% select(Experiment.Group:Rat.Sex)
 df_metabolomics_Exp$GroupTime <-paste(df_metabolomics_Exp$Experiment.Group, df_metabolomics_Exp$Experiment.Time, sep = " ")
+df_metabolomics_Values <- df_metabolomics %>% select(-(Experiment.Group:Rat.Sex))
+#df_metabolomics_Values <- df_metabolomics_Values %>% select(-(Oleoyl.EA))
+
+
+
+
 
 
 
@@ -323,6 +332,17 @@ at the end of the data frame. Also make and add the Group variable to
 the df with experimental details [1].
 
 ```{r Assignment 1B, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+df_transcriptomics_Exp <- df_transcriptomics %>% tail(3)
+df_transcriptomics_Exp <- df_transcriptomics_Exp %>% t() %>% as.data.frame()
+df_transcriptomics_Exp$GroupTime <- paste(df_transcriptomics_Exp$`Experiment Group`, df_transcriptomics_Exp$`Experiment Time` , sep= " ")
+df_transcriptomics_Values <- df_transcriptomics %>% slice(1:(nrow(df_transcriptomics)-3))
+
+
+
+#df_transcriptomics_Exp$GroupTime <-paste(df_transcriptomics_Exp$"Experiment Group", df_transcriptomics_Exp$"Experiment Time", sep = " ")
+#df_transcriptomics_Values <- df_transcriptomics %>% filter(-("Experiment Group":"sex"))
+
 
 ```
 
@@ -341,7 +361,9 @@ those genes for which this number is larger than 25. Make a new data
 frame df_transcriptomics_Filtered that only contains these genes. [1]
 
 ```{r Assignment 1C,Filter genes, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
-
+df_transcriptomics_Values <- df_transcriptomics_Values %>% mutate(zero_count = rowSums(. == 0 , na.rm = TRUE ))
+df_transcriptomics_Filtered <- df_transcriptomics_Values %>% filter( zero_count > 25 )
+df_transcriptomics_Filtered
 ```
 
 #### 1D)
@@ -351,6 +373,22 @@ transcriptomics_Filtered and transcriptomics_Exp data frames into new
 csv files in your working directory. [2]
 
 ```{r Assignment 1D, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+write.csv(df_metabolomics_Values,
+          file = "metabolomics_Values.csv",
+          row.names = FALSE)
+
+write.csv(df_metabolomics_Exp,
+          file = "metabolomics_Exp.csv",
+          row.names = FALSE)
+
+# Write transcriptomics dataframes to CSV
+write.csv(df_transcriptomics_Filtered,
+          file = "transcriptomics_Filtered.csv",
+          row.names = FALSE)
+
+write.csv(df_transcriptomics_Exp,
+          file = "transcriptomics_Exp.csv",
+          row.names = FALSE)
 
 ```
 
@@ -368,7 +406,63 @@ assignments.
     Add labels for the x-axis and titles for each subfigure. [1]\
 
 ```{r Assignment 1E, include=TRUE, eval=TRUE, echo=TRUE}
+df_transcriptomics_Filtered = as.data.frame(apply(df_transcriptomics_Filtered, 2, function(x) as.numeric(as.character(x))))
+df_transcriptomics_Filtered$trans_row <- log10(rowSums(df_transcriptomics_Filtered))
+df_transcriptomics_Filtered_t <- df_transcriptomics_Filtered %>% t()
+df_transcriptomics_Filtered_t <- as.data.frame(t(df_transcriptomics_Filtered))
+df_transcriptomics_Filtered_t$trans_col <- log10(rowSums(df_transcriptomics_Filtered_t))
 
+
+
+
+row_data <- data.frame(
+  sample = rownames(df_transcriptomics_Filtered),
+  log_row_sum = df_transcriptomics_Filtered$trans_row
+)
+
+p1 <- ggplot(row_data, aes(x = sample, y = log_row_sum)) +
+  geom_col(fill = "skyblue", alpha = 0.7) +
+  labs(
+    title = "Log10(Row Sums) by Sample",
+    x = "Sample Name",
+    y = "Log10(Row Sum)"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+p1
+
+col_data <- data.frame(
+  feature = rownames(df_transcriptomics_Filtered_t),
+  log_col_sum = df_transcriptomics_Filtered_t$trans_col
+)
+
+p2 <- ggplot(col_data, aes(x = feature, y = log_col_sum)) +
+  geom_col(fill = "salmon", alpha = 0.7) +
+  labs(
+    title = "Log10(Column Sums) by Feature",
+    x = "Feature Name",
+    y = "Log10(Column Sum)"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+p2
+
+
+
+p3 <- ggplot(data.frame(trans_row), aes(x = trans_row)) +
+  geom_histogram(binwidth = 0.2, fill = "red", alpha = 0.7) +
+  labs(title = "Distribution of Log10(Row Sums)", x = "Log10(Row Sum)", y = "Frequency") +
+  theme_minimal()
+
+p4 <- ggplot(data.frame(trans_col), aes(x = trans_col)) +
+  geom_histogram(binwidth = 0.2, fill = "purple", alpha = 0.7) +
+  labs(title = "Distribution of Log10(Column Sums)", x = "Log10(Column Sum)", y = "Frequency") +
+  theme_minimal()
+
+# Arrange plots
+gridExtra::grid.arrange(p3, p4, ncol = 2)
 ```
 
 #### 1F): Interpretation.
@@ -393,6 +487,35 @@ useful to plot the log of the row and column sums?
     dataset.[1]\
 
 ```{r Assignment 1G, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+
+
+# Calculate column means
+col_means <- apply(df_transcriptomics_Filtered_t, 2, mean, na.rm = TRUE)
+
+# Calculate column standard deviations
+col_sds <- apply(df_transcriptomics_Filtered_t, 2, sd, na.rm = TRUE)
+
+# Combine into a dataframe for plotting
+col_stats <- data.frame(
+  mean = col_means,
+  sd = col_sds
+)
+
+
+# Calculate log10 of mean and standard deviation
+col_stats$log_mean <- log10(col_stats$mean)
+col_stats$log_sd <- log10(col_stats$sd)
+
+# Create scatter plot
+ggplot(col_stats, aes(x = log_mean, y = log_sd)) +
+  geom_point(alpha = 0.6, color = "blue") +
+  labs(
+    title = "Log10(Standard Deviation) vs. Log10(Mean) for Transcriptomics Data",
+    x = "Log10(Mean)",
+    y = "Log10(Standard Deviation)"
+  ) +
+  theme_minimal() +
+  geom_smooth(method = "lm", se = FALSE, color = "red")  # Optional: Add a trend line
 
 ```
 
@@ -424,6 +547,63 @@ axes. [0.5]\
 
 ```{r Assignment 1I, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
 
+alanine_raw <- df_metabolomics_Values$Alanine
+
+
+alanine_centered <- alanine_raw - mean(alanine_raw, na.rm = TRUE)
+
+
+alanine_scaled <- alanine_centered / sd(alanine_raw, na.rm = TRUE)
+
+
+alanine_data <- data.frame(
+  raw = alanine_raw,
+  centered = alanine_centered,
+  scaled = alanine_scaled,
+  rat_id = rownames(df_metabolomics_Values)
+)
+
+
+alanine_long <- alanine_data %>%
+  pivot_longer(
+    cols = c(raw, centered, scaled),
+    names_to = "transformation",
+    values_to = "value"
+  )
+
+
+p1 <- ggplot(alanine_long, aes(x = rat_id, y = value, color = transformation)) +
+  geom_point(size = 3) +
+  facet_wrap(~ transformation, scales = "free_y", ncol = 1) +
+  labs(
+    title = "Alanine Levels: Raw, Mean-Centered, and Scaled",
+    x = "Rat ID",
+    y = "Alanine Level"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+p_raw <- ggplot(alanine_data, aes(x = rat_id, y = raw)) +
+  geom_point(color = "blue") +
+  labs(title = "Raw Alanine Levels", x = "Rat ID", y = "Alanine Level") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+p_centered <- ggplot(alanine_data, aes(x = rat_id, y = centered)) +
+  geom_point(color = "red") +
+  labs(title = "Mean-Centered Alanine Levels", x = "Rat ID", y = "Alanine Level") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+p_scaled <- ggplot(alanine_data, aes(x = rat_id, y = scaled)) +
+  geom_point(color = "green") +
+  labs(title = "Mean-Centered and Scaled Alanine Levels", x = "Rat ID", y = "Scaled Alanine Level") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+gridExtra::grid.arrange(p_raw, p_centered, p_scaled, ncol = 1)
+
 ```
 
 #### 1J): Interpretation.
@@ -454,6 +634,18 @@ information is used with respect to scaling the data. [1]
 
 ```{r Assignment 1K, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
 
+metabolite_sds <- apply(df_metabolomics_Values, 2, sd, na.rm = TRUE)
+
+
+ggplot(data.frame(metabolite_sds), aes(x = metabolite_sds)) +
+  geom_histogram(binwidth = 0.05, fill = "skyblue", alpha = 0.7) +
+  labs(
+    title = "Distribution of Standard Deviations of Metabolite Levels",
+    x = "Standard Deviation",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+
 ```
 
 **Put your discussion what you can learn for the histogram here.**
@@ -480,6 +672,7 @@ Load the normalized datafile Blood_RNA_Normalized_C8_T8.csv from Canvas.
 
 ```{r load normalized gene expression data }
 df_transcriptomics_Filtered_Norm = read.csv("Blood_RNA_Normalized_C8_T8.csv", row.names = 1)
+
 ```
 
 #### 2A)
@@ -487,7 +680,14 @@ df_transcriptomics_Filtered_Norm = read.csv("Blood_RNA_Normalized_C8_T8.csv", ro
 Transpose the data and remove the sex variable.[1]
 
 ```{r Assignment 2A, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
+df_transcriptomics_Filtered_Norm_t <- as.data.frame(t(df_transcriptomics_Filtered_Norm))
 
+
+
+
+df_transcriptomics_Filtered_Norm_t <- df_transcriptomics_Filtered_Norm_t %>% select(-sex)  
+
+df_transcriptomics_Filtered_Norm_t
 ```
 
 #### 2B)
@@ -499,16 +699,70 @@ Transpose the data and remove the sex variable.[1]
 4.  Plot the std vs the mean in a loglog plot.[1]
 
 ```{r Assignment 2B, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
-#1
+# 1. Create indexes for Control and Training groups
+sample_names <- colnames(df_transcriptomics_Filtered_Norm)
+control_index <- grepl("C8", sample_names)  # Adjust pattern if needed (e.g., "Control")
+training_index <- grepl("T8", sample_names)  # Adjust pattern if needed (e.g., "Training")
 
-#2
+# Verify the indexes
+table(control_index, training_index)  # This will show how many samples are in each group
 
-#3
+# 2. Calculate mean and standard deviation per group for each gene
+gene_data <- as.matrix(df_transcriptomics_Filtered_Norm)  # Ensure data is in matrix format
 
-#4
-#Plot results for control samples in blue and the 8week training samples in red
+control_means <- rowMeans(gene_data[, control_index, drop = FALSE])
+control_sds <- apply(gene_data[, control_index, drop = FALSE], 1, sd)
+
+training_means <- rowMeans(gene_data[, training_index, drop = FALSE])
+training_sds <- apply(gene_data[, training_index, drop = FALSE], 1, sd)
+
+# Combine into a dataframe for plotting
+gene_stats <- data.frame(
+  gene = rownames(gene_data),
+  control_mean = control_means,
+  control_sd = control_sds,
+  training_mean = training_means,
+  training_sd = training_sds
+)
+
+# 3. Calculate log10 of means and standard deviations
+gene_stats$log_control_mean <- log10(gene_stats$control_mean)
+gene_stats$log_control_sd <- log10(gene_stats$control_sd)
+gene_stats$log_training_mean <- log10(gene_stats$training_mean)
+gene_stats$log_training_sd <- log10(gene_stats$training_sd)
+
+# 4. Plot Log(SD) vs. Log(Mean) for each group
+p5 <- ggplot(gene_stats, aes(x = log_control_mean, y = log_control_sd)) +
+  geom_point(alpha = 0.6, color = "blue") +
+  labs(title = "Log10(SD) vs. Log10(Mean) for Control Group",
+       x = "Log10(Mean)", y = "Log10(Standard Deviation)") +
+  theme_minimal() +
+  geom_smooth(method = "lm", se = FALSE, color = "red")
+
+p6 <- ggplot(gene_stats, aes(x = log_training_mean, y = log_training_sd)) +
+  geom_point(alpha = 0.6, color = "green") +
+  labs(title = "Log10(SD) vs. Log10(Mean) for Training Group",
+       x = "Log10(Mean)", y = "Log10(Standard Deviation)") +
+  theme_minimal() +
+  geom_smooth(method = "lm", se = FALSE, color = "red")
+
+# Combined plot for both groups
+p7 <- ggplot() +
+  geom_point(data = gene_stats, aes(x = log_control_mean, y = log_control_sd, color = "Control"), alpha = 0.6) +
+  geom_point(data = gene_stats, aes(x = log_training_mean, y = log_training_sd, color = "Training"), alpha = 0.6) +
+  labs(title = "Log10(SD) vs. Log10(Mean) by Group",
+       x = "Log10(Mean)", y = "Log10(Standard Deviation)", color = "Group") +
+  scale_color_manual(values = c("Control" = "blue", "Training" = "green")) +
+  theme_minimal() +
+  geom_smooth(data = gene_stats, aes(x = log_control_mean, y = log_control_sd, color = "Control"), method = "lm", se = FALSE) +
+  geom_smooth(data = gene_stats, aes(x = log_training_mean, y = log_training_sd, color = "Training"), method = "lm", se = FALSE)
+
+# Arrange plots
+gridExtra::grid.arrange(p5, p6, p7, ncol = 2)
 
 ```
+
+\
 
 #### 2C: Interpretation
 
@@ -673,10 +927,33 @@ well as features that can distinguish the different training durations.
 
 ```{r Assignment 3A, include=TRUE, eval=TRUE, echo=TRUE, message=FALSE}
 #0 
+Metabolomics_Exp <- read.csv("metabolomics_Exp.csv")
+Metabolomics_Values <- read.csv("metabolomics_Values.csv")
+MC_Metabolomics_Values <- Metabolomics_Values %>% scale(center = TRUE, scale = FALSE) 
+
 
 #1 
-
+svd_result <- svd(MC_Metabolomics_Values)
 #2
+scores <- svd_result$u %*% diag(svd_result$d)
+Pc1 <- scores [,1]
+Pc2 <- scores[,2]
+
+Metabolomics_Exp$PC1 <- Pc1
+Metabolomics_Exp$PC2 <- Pc2
+
+
+
+ggplot(Metabolomics_Exp, aes(x = PC1, y = PC2, color = GroupTime)) +
+  geom_point(size = 3) +
+  labs(
+    title = "PCA of Mean-Centered Metabolomics Data",
+    x = paste("PC1 (Variance Explained: ", round(var(Pc1) / sum(svd_result$d^2) * 100, 1), "%)", sep = ""),
+    y = paste("PC2 (Variance Explained: ", round(var(Pc2) / sum(svd_result$d^2) * 100, 1), "%)", sep = ""),
+    color = "Treatment Group"
+  ) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set1")
 
 #3
 
